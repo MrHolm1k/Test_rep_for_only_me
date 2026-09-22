@@ -1,4 +1,4 @@
-def addition(a,b):
+def addition(a: float,b:float) -> float:
     return a+b
 
 def subtraction(a,b):
