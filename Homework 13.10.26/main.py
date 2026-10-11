@@ -4,9 +4,13 @@ import os
 from collections import defaultdict
 from abc import ABC, abstractmethod
 
+# Константные переменные
+
 USER_DICT_KEYS = {"id", "name", "username", "email", "address", "phone", "website", "company"}
 
+# Ошибки
 
+ERROR_NO_JSON_FILE = 1
 
 class NoJsonFiles(Exception):
     def __init__(self, message: str = "Никаких json файлов не найдено"):
@@ -80,13 +84,57 @@ class JsonSelectionByKeys(JsonSelection):
 
 
         return selected_files
-        
+ 
+# Класс парсера
 
-# Лучше запихнуть в класс. 
-# 1) лучше передовать функцию с обёрткой для быстрого изменения.
-# 2) Передовать список с файлами, неправильность заполнения будет узнаваться на этапе парсинга
+class Parcing(ABC):
+    @abstractmethod
+    def parcing(self) -> dict:
+        ...
+    @abstractmethod
+    def get_parcing_method(self) -> str:
+        ...
 
+class ParcerByCityName(Parcing):
+    def __init__(self, files: JsonFinder, files_selected: JsonSelection):
+        self.files = files_selected.selector(files.find_json())
+
+    def parcing(self) -> dict:
+        parcered_dict = defaultdict(list)
+
+        for file_name in self.files: 
+            
+            with open(file_name, "r", encoding="UTF-8") as file:
+                list_in_json = json.load(file)
+                
+                for dict_list in list_in_json:
+                    city = dict_list["address"]["city"]
+                    name = dict_list["name"]
+                    parcered_dict[city].append(name)
+
+        return parcered_dict
+    
+    def get_parcing_method(self):
+        return f"Сортировка ГОРОД-ИМЯ"
+
+class MyParced:
+    def __init__(self, parcing_class: Parcing):
+        self.parcing_class = parcing_class
+        self.parcered_dict: dict = parcing_class.parcing()
+
+    def __call__(self):
+        print(self.parcing_class.get_parcing_method())
+
+        for key, values in self.parcered_dict.items():
+            print(f"Ключ: {key}, значение: {values}")
 
 if __name__ == "__main__":
-    pass   
+    try:
+        MyParced(ParcerByCityName(WalkJsonFinder(), JsonSelectionByKeys(USER_DICT_KEYS)))()
+    except NoJsonFiles as e:
+        print(f"{e}, выход с кодом ошибки 1")
+        sys.exit(ERROR_NO_JSON_FILE)
+        
+
+        
 
