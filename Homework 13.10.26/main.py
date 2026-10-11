@@ -64,23 +64,29 @@ class JsonSelectionByKeys(JsonSelection):
         selected_files = list()
         
         for file_name in files:
+            try:
+                with open(file_name, "r", encoding="UTF-8") as file:
+                    temp_something_in_json = json.load(file)
+
+# Если json пустой он валится, поэтому для пропуска пустых json нужно проверять
             
-            with open(file_name, "r", encoding="UTF-8") as file:
-                temp_something_in_json = json.load(file)
+            except (json.JSONDecodeError, OSError):
+                continue
+
 
 # Можно так а можно через all() <- возвращает true если для всех интерируемых истина
 
-                if isinstance(temp_something_in_json, list):
-                    amount_of_elemts = len(temp_something_in_json)
-                    temp_amount = 0
+            if isinstance(temp_something_in_json, list):
+                amount_of_elemts = len(temp_something_in_json)
+                temp_amount = 0
                     
-                    for dict_of_somthing in temp_something_in_json:
+                for dict_of_somthing in temp_something_in_json:
                         
-                        if isinstance(dict_of_somthing, dict) and self.dict_keys.issubset(dict_of_somthing.keys()):
-                            temp_amount += 1
+                    if isinstance(dict_of_somthing, dict) and self.dict_keys.issubset(dict_of_somthing.keys()):
+                        temp_amount += 1
 
-                    if temp_amount == amount_of_elemts and temp_amount != 0:
-                        selected_files.append(file_name)
+                if temp_amount == amount_of_elemts and temp_amount != 0:
+                    selected_files.append(file_name)
 
 
         return selected_files
@@ -112,7 +118,7 @@ class ParcerByCityName(Parcing):
                     name = dict_list["name"]
                     parcered_dict[city].append(name)
 
-        return parcered_dict
+        return dict(parcered_dict)
     
     def get_parcing_method(self):
         return f"Сортировка ГОРОД-ИМЯ"
@@ -136,11 +142,14 @@ if __name__ == "__main__":
     
     try:
         parced_text = MyParced(ParcerByCityName(WalkJsonFinder(), JsonSelectionByKeys(USER_DICT_KEYS)))
-        json.dump(parced_text.get_dict(), file, ensure_ascii=False)
+        json.dump(parced_text.get_dict(), file, ensure_ascii=False, indent=2)
     
     except NoJsonFiles as e:
         print(f"{e}, выход с кодом ошибки 1")
         sys.exit(ERROR_NO_JSON_FILE)
+
+    except:
+        file.close()
 
     finally:
         file.close()
