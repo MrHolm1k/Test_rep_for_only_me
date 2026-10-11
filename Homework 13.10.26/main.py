@@ -38,6 +38,7 @@ class WalkJsonFinder(JsonFinder):
             for file_name in file_names:
                 
                 if file_name.endswith(".json"):
+
                     list_of_json.append(os.path.join(path, file_name))
         
         if not list_of_json:
@@ -138,19 +139,19 @@ class MyParced:
             print(f"Ключ: {key}, значение: {values}")
 
 if __name__ == "__main__":
-    file = open("cities.json", "w", encoding="UTF-8")
     
     try:
         parced_text = MyParced(ParcerByCityName(WalkJsonFinder(), JsonSelectionByKeys(USER_DICT_KEYS)))
-        json.dump(parced_text.get_dict(), file, ensure_ascii=False, indent=2)
     
     except NoJsonFiles as e:
         print(f"{e}, выход с кодом ошибки 1")
         sys.exit(ERROR_NO_JSON_FILE)
+   
 
-    except:
-        file.close()
-
+    file = open("cities.json", "w", encoding="UTF-8")
+    
+    try:
+        json.dump(parced_text.get_dict(), file, ensure_ascii=False, indent=2)
     finally:
         file.close()
         
