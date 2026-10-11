@@ -122,6 +122,9 @@ class MyParced:
         self.parcing_class = parcing_class
         self.parcered_dict: dict = parcing_class.parcing()
 
+    def get_dict(self):
+        return self.parcered_dict
+
     def __call__(self):
         print(self.parcing_class.get_parcing_method())
 
@@ -129,11 +132,18 @@ class MyParced:
             print(f"Ключ: {key}, значение: {values}")
 
 if __name__ == "__main__":
+    file = open("cities.json", "w", encoding="UTF-8")
+    
     try:
-        MyParced(ParcerByCityName(WalkJsonFinder(), JsonSelectionByKeys(USER_DICT_KEYS)))()
+        parced_text = MyParced(ParcerByCityName(WalkJsonFinder(), JsonSelectionByKeys(USER_DICT_KEYS)))
+        json.dump(parced_text.get_dict(), file, ensure_ascii=False)
+    
     except NoJsonFiles as e:
         print(f"{e}, выход с кодом ошибки 1")
         sys.exit(ERROR_NO_JSON_FILE)
+
+    finally:
+        file.close()
         
 
         
