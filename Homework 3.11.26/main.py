@@ -32,7 +32,7 @@ PRODUCTS_RULE = parcer_classes.TableRule(
 )
 
 
-def main() -> None:
+def main():
     finder = parcer_classes.WalkJsonFinder(root=str(ROOT))
     selection = parcer_classes.JsonSelectionByKeys({"product_name", "price", "category"})
 
