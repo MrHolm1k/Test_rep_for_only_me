@@ -1,6 +1,7 @@
 import json
 import os
 from collections import defaultdict
+from dataclasses import dataclass
 from abc import ABC, abstractmethod
 from typing import DefaultDict
 
@@ -128,6 +129,74 @@ class ParcerGetDataFromSelectedJSON(Parcing):
     
     def get_parcing_method(self) -> str:
         return f"Возращаем содержимое json files в виде словаря. ИМЯ_ФАЙЛА:СОДЕРЖИМОЕ_ФАЙЛА"
+
+
+# INFO: Нормализация данных: одно правило -> одна таблица.
+# Парсер возвращает словарь {имя_таблицы: [строки]}, чтобы не ломать контракт Parcing.parcing() -> dict.
+
+
+
+@dataclass(frozen=True)
+class TableRule:
+    # Имя будущей таблицы
+    table: str
+    # Путь к сущности внутри записи JSON (пустой кортеж = запись целиком)
+    entity_path: tuple[str, ...]
+    # Путь к полю, по которому сущность считается уникальной (внутри сущности)
+    key_path: tuple[str, ...]
+    # Колонка таблицы -> путь к значению внутри сущности
+    fields: dict[str, tuple[str, ...]]
+    # Схлопывать повторы по ключу 
+    deduplicate: bool = True
+
+
+class ParcerNormalizedJSONData(Parcing):
+    def __init__(self, files: JsonFinder, files_selected: JsonSelection, rule: TableRule):
+        self.files: list[str] = files_selected.selector(files.find_json())
+        self.rule = rule
+
+    def parcing(self) -> dict:
+        rows: list[dict] = list()
+        seen: set = set()
+
+        for file_name in self.files:
+            with open(file_name, "r", encoding="UTF-8") as file:
+                list_in_json = json.load(file)
+
+            for record in list_in_json:
+                if not isinstance(record, dict):
+                    continue
+
+                entity = self._get_by_path(record, self.rule.entity_path)
+                if not isinstance(entity, dict):
+                    continue
+
+                key = self._get_by_path(entity, self.rule.key_path)
+                if key is None:
+                    continue
+
+                if self.rule.deduplicate:
+                    if key in seen:
+                        continue
+                    seen.add(key)
+
+                rows.append(
+                    {column: self._get_by_path(entity, path)
+                     for column, path in self.rule.fields.items()}
+                )
+
+        return {self.rule.table: rows}
+
+    @staticmethod
+    def _get_by_path(data, path: tuple[str, ...]):
+        for part in path:
+            if not isinstance(data, dict) or part not in data:
+                return None
+            data = data[part]
+        return data
+
+    def get_parcing_method(self) -> str:
+        return f"Нормализация данных в таблицу {self.rule.table}"
 
 
 
