@@ -31,3 +31,6 @@ user_table = Table(
 
 metadate2.create_all(engine)
 
+
+with engine.connect() as connection:
+
