@@ -21,7 +21,6 @@ class CatalogDB:
     def __init__(self, path: str = "catalog.db"):
         self.conn = sqlite3.connect(path)
         self.conn.row_factory = sqlite3.Row
-        # Без этого SQLite не проверяет внешние ключи
         self.conn.execute("PRAGMA foreign_keys = ON")
         self.conn.executescript(SCHEMA)
 
@@ -36,8 +35,10 @@ class CatalogDB:
         self.conn.close()
 
     def save(self, normalized: dict[str, list[dict]]) -> None:
-        # Повторный запуск не должен плодить дубли,
-        # поэтому чистим в порядке, безопасном для внешнего ключа
+        
+# Повторный запуск не должен плодить дубли,
+# поэтому чистим в порядке, безопасном для внешнего ключа
+        
         self.conn.execute("DELETE FROM products")
         self.conn.execute("DELETE FROM categories")
 
