@@ -1,6 +1,10 @@
 import sqlite3
 
 
+# TODO: Переписать класс db, разделеив на несколько классов для создания db и заполнения её.
+# Если будет добовление в таблицу выбранную надо делать защиту от sql инъекций
+# Можно реалиазовать на sqlachemy, но хочеться самому потрогать.
+
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS categories (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
