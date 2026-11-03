@@ -61,20 +61,20 @@ def create_table(engine: Engine) -> dict[str, Table]:
 
     return metadict
 
-def insert_into_catagories(connection: Connection, metatabel: Table,  rows: list[dict]) -> dict[str, int]:
+def insert_into_catagories(connection: Connection, created_table: Table,  rows: list[dict]) -> dict[str, int]:
     
     ids = dict()
 
     for row in rows:
-        statment = insert(metatabel).values(name=row["name"], description=row["description"])
+        statment = insert(created_table).values(name=row["name"], description=row["description"])
         result = connection.execute(statment)
         ids[row["name"]] = result.inserted_primary_key[0]
 
     return ids
 
-def insert_into_productes(connection: Connection, metatabel: Table,  rows: list[dict], ids: dict[str, int]) -> None:
+def insert_into_productes(connection: Connection, created_table: Table,  rows: list[dict], ids: dict[str, int]) -> None:
     for row in rows:
-        statment = insert(metatabel).values(category_id=ids[row["category_name"]], product_name=row["product_name"], price=row["price"])
+        statment = insert(created_table).values(category_id=ids[row["category_name"]], product_name=row["product_name"], price=row["price"])
         connection.execute(statment)
 
         
