@@ -1,6 +1,6 @@
 import sys
 from pathlib import Path
-from sqlalchemy import Table, MetaData, Integer, create_engine, Column, String, Float, Boolean, Engine, ForeignKey, Connection, insert
+from sqlalchemy import Table, MetaData, Integer, create_engine, Column, String, Float, Boolean, Engine, ForeignKey, Connection, insert, Result
 
 
 import parcer_classes
@@ -68,7 +68,7 @@ def insert_into_catagories(connection: Connection, created_table: Table,  rows: 
     for row in rows:
         statment = insert(created_table).values(name=row["name"], description=row["description"])
         result = connection.execute(statment)
-        ids[row["name"]] = result.inserted_primary_key[0]
+        ids[row["name"]] = result.inserted_primary_key[0] # type: ignore
 
     return ids
 
