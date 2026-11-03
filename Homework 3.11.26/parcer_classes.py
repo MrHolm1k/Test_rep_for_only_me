@@ -16,6 +16,14 @@ class NoJsonFiles(Exception):
     def __init__(self, message: str = "Никаких json файлов не найдено"):
         super().__init__(message)
 
+
+
+# TODO: Дописать класс чтения файла и переменовать метод классов json в file_find.Данный класс будет наследовать все find json классы, кроме абстрактных
+# @abstractmethod
+# class ReadFile(ABC):
+# TODO: Нужно разделить чтение и поиск файлов. Создать также абстрактный класс чтения. Один будет читать с файла, другой с stdin или который подаёться просто на класс
+
+
 # Абстрактный класс, поиска
 
 class JsonFinder(ABC):

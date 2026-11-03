@@ -5,7 +5,7 @@ import parcer_classes
 import sqlite3_db_classes
 
 
-# EXIT CODE
+# EXIT CODES
 NO_JSON_FOUND = 1
 
 # Ищем и создаём БД рядом с этим файлом, а не в текущей директории запуска
