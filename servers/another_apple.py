@@ -14,5 +14,4 @@ try:
 except requests.ConnectTimeout:
     sys.exit(1)
 
-
 print(f"{json_data['name']}. Вероятный возраст {result_age.json()["age"]}.\nВероятность женского пола {result_gen.json()['probability']}.")
