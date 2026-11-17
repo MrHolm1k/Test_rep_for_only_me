@@ -1,7 +1,9 @@
 import requests
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from json import JSONDecodeError
 
+# kw_only чтобы нельзя было передовать по порядку, а чётко указывать, что какому параметру передаём
 @dataclass(frozen=True, kw_only=True)
 class HttpRequest:
     url: str 
@@ -10,6 +12,9 @@ class HttpRequest:
     params: dict | None = None
     json_data: dict | None = None
 
+
+
+# Классы для запросов HTTP
 
 class GetMethod(ABC):
     @abstractmethod
@@ -21,47 +26,52 @@ class HTTPmethods(GetMethod, ABC):
     def http_request(self, session: requests.Session, request_data: HttpRequest) -> requests.Response:
         ...
 
+class GetHttpMethod(HTTPmethods):
+    def http_request(self, session: requests.Session, request_data: HttpRequest) -> requests.Response:
+        return session.get(request_data.url, params=request_data.params,
+                           headers=request_data.headers, timeout=request_data.timeout)
+    
+    def get_method(self) -> str:
+        return f"HTTP GET METHOD"
 
+class PostHttpMethod(HTTPmethods):
+    def http_request(self, session: requests.Session, request_data: HttpRequest) -> requests.Response:
+        return session.post(request_data.url, json=request_data.json_data,
+                           headers=request_data.headers, timeout=request_data.timeout)
+
+    def get_method(self) -> str:
+        return f"HTTP POST METHOD"
+
+# HTTP клиенты классы
 class HttpClient(ABC):
     @abstractmethod
-    def send_http_request(self, method: HTTPmethods, request_data: HttpRequest):
+    def send_http_request(self, method: HTTPmethods, request_data: HttpRequest) -> dict | str:
         ...
     
     
-class ReqestsHttpClient(HttpClient):
-    def __init__(self, session: requests.Session | None):
+class RequestsHttpClient(HttpClient):
+    def __init__(self, session: requests.Session | None = None):
+        #  или self._session = session or requests.Session()
         if not session == None:
             self._session = session # protectid поле
-        else: 
+        elif session == None: 
             self._session = requests.Session()
 
     # Крайне ограниченная функция, надо добавить, что возращать: json, str, code, headers и т.д.
-    # Умышленно убрал, что функция должна возращать
+    # Чтобы этого избежать лушче создать data_class со всеми необходимыми данными
 
     def send_http_request(self, method: HTTPmethods, request_data: HttpRequest):
         try:
             response: requests.Response = method.http_request(self._session, request_data)
             response.raise_for_status()
+        except requests.HTTPError as e:
+            raise
         except requests.RequestException as e: 
-            print(f"")
-            raise 
-        except
+            raise        
+        try:
+            if "json" in response.headers.get("Content-Type", ""):
+                return response.json()
+        except JSONDecodeError:
+            pass
 
-        if "json" in response.headers["Content-Type"]:
-            return response.json()
-        
-
-
-# try:
-#     result_age = requests.get(urls['url_age'], params=json_data, timeout=10)
-# except requests.ConnectTimeout:
-#     sys.exit(1)
-#
-# try:
-#     result_gen = requests.get(urls['url_gen'], params=json_data, timeout=10)
-# except requests.ConnectTimeout:
-#     sys.exit(1)
-#
-# print(f"{json_data['name']}. Вероятный возраст {result_age.json()["age"]}.\nВероятность женского пола {result_gen.json()['probability']}.")
-
-
+        return response.text
